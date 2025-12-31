@@ -13,17 +13,19 @@ resource "aws_vpc_security_group_ingress_rule" "myingressrules" {
   ip_protocol = "tcp" 
   cidr_ipv4 = "0.0.0.0/0"
 } 
-resource "tls_private_key" "ec2_key" {
-  algorithm = "ED25519"
+data "aws_ami" "myapsouthami" {
+  filter {
+    name = "name" 
+    values = [ "ubuntu/images/hvm-ssd-gp3/ubuntu-noble-24.04-amd64-server-20250925" ]
+  } 
+  owners = [ "099720109477" ]
 }
-
 resource "aws_key_pair" "myownkey" {
-  key_name   = "mysshownkey"
-  public_key = tls_private_key.ec2_key.public_key_openssh
-}
-
+  key_name = "mysshownkey" 
+  public_key = file("~/id_rsa.pub") 
+} 
 resource "aws_instance" "myec2" {
-  ami = "ami-02b8269d5e85954ef" 
+  ami = data.aws_ami.myapsouthami.id 
   instance_type = "t3.micro" 
   key_name = aws_key_pair.myownkey.key_name 
   associate_public_ip_address = true 
